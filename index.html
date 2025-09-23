@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Timer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <h1 class="app__title">Study Timer</h1>
+    <section class="timer" aria-label="Pomodoro Timer">
+      <p class="timer__label" id="session-label">Study</p>
+      <p class="timer__display" id="time-display" aria-live="polite" aria-atomic="true">30:00</p>
+    </section>
+    <section class="controls" aria-label="Timer controls">
+      <button id="start-pause" class="controls__button">Start</button>
+      <button id="reset" class="controls__button controls__button--secondary">Reset</button>
+    </section>
+    <p class="app__hint">30 minutes of focused study followed by 15 minutes of rest.</p>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
