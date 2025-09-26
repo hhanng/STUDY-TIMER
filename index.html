@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Matcha Study Timer 🍵</title>
+  <!-- Nhúng font Poppins từ Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* 🎨 Các màu sắc chính (CSS variables) */
+    :root{
+      --matcha:#7bb661;
+      --deep-matcha:#6b8e23;
+      --cream:#f8f7f4;
+      --ice:#e6f0e1;
+      --ink:#243220;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    /* 🌿 Nền trang và font chữ */
+    body{
+      margin:0;
+      font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 70% -10%, var(--ice), transparent 60%),
+                  radial-gradient(1000px 1000px at -10% 110%, #eef6ea, transparent 50%),
+                  var(--cream);
+      color:var(--ink);
+      display:grid; place-items:center;
+    }
+
+    /* 📦 Thẻ chính bao quanh timer */
+    .card{
+      width:min(680px, 92vw);
+      background:#ffffffee;
+      backdrop-filter: blur(8px);
+      border-radius:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.12);
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* Hiệu ứng "drip matcha" phía trên */
+    .card::before{
+      content:""; position:absolute; inset:-80px -40px auto -40px; height:180px;
+      background: radial-gradient(60px 80px at 12% 60%, rgba(0,0,0,.06), transparent 45%),
+                  radial-gradient(70px 90px at 45% 75%, rgba(0,0,0,.05), transparent 45%),
+                  linear-gradient(180deg, var(--matcha), var(--deep-matcha));
+      clip-path:path("M0,0 L1000,0 L1000,60 C900,120 820,90 720,130 C640,160 600,150 520,170 C460,185 380,160 320,170 C240,185 220,165 160,150 C110,138 80,160 0,140 Z");
+      opacity:.14;
+    }
+
+    /* 🟩 Header: icon ly matcha + tiêu đề */
+    header{ display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+    .cup{
+      width:42px; height:42px; border-radius:12px;
+      background: conic-gradient(from 200deg, var(--deep-matcha), var(--matcha));
+      position:relative; box-shadow: inset 0 0 0 6px #fff, 0 6px 16px rgba(0,0,0,.15);
+    }
+    /* phần màu trắng bên trong ly */
+    .cup::after{content:""; position:absolute; inset:60% 6px 6px; background:var(--cream); border-radius:12px; opacity:.9}
+
+    h1{font-size:1.25rem; margin:0; font-weight:600}
+    .subtitle{font-size:.9rem; color:#3b5535; opacity:.8}
+
+    /* Bố cục 2 cột: bên trái đồng hồ, bên phải input + nút */
+    .layout{display:grid; grid-template-columns: 1fr; gap:20px;}
+    @media(min-width:720px){.layout{grid-template-columns: 1fr 1fr}}
+
+    /* ⏱ Khu vực mặt đồng hồ */
+    .face{
+      display:grid; place-items:center; background:linear-gradient(180deg, #fff, #f6fbf3);
+      border-radius:24px; padding:24px; position:relative; min-height:320px;
+      box-shadow:inset 0 0 0 1px #eef3ea;
+    }
+    .ring{ width:260px; height:260px; position:relative;}
+    .ring svg{ width:100%; height:100%; display:block;}
+
+    /* Khu vực hiển thị số thời gian */
+    .time{ position:absolute; inset:0; display:grid; place-items:center; text-align:center; }
+    .big{ font-size:64px; letter-spacing:1px; color:var(--deep-matcha); line-height:1; }
+    .mode{ font-size:.95rem; margin-top:6px; color:#4b6a41; }
+
+    /* 🔘 Các nút bấm */
+    .controls{ display:flex; flex-wrap:wrap; gap:10px;}
+    button{
+      appearance:none; border:none; cursor:pointer; border-radius:14px; padding:12px 16px;
+      font-weight:600; background:var(--matcha); color:#fff; box-shadow:0 6px 14px rgba(107,142,35,.25);
+      transition: transform .04s ease, box-shadow .2s ease, background .2s ease;
+    }
+    button:hover{ filter:saturate(1.1) }
+    button:active{ transform: translateY(1px) }
+    .ghost{ background:#eef6ea; color:#25501f; box-shadow:none }
+
+    /* Ô input để nhập số phút */
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    label{ font-size:.85rem; color:#476042; display:block; margin-bottom:6px; }
+    input[type="number"]{
+      width:100%; padding:12px 12px; border-radius:12px; border:1px solid #e4ecdf; background:#fbfdf9;
+      font-size:1rem; color:#1f2e1c;
+    }
+    .hint{ font-size:.8rem; color:#5b7551; opacity:.9 }
+
+    footer{ margin-top:8px; font-size:.8rem; color:#4d6a46; text-align:center }
+    a{ color:#356a2a; text-decoration:none }
+  </style>
+</head>
+<body>
+  <!-- 🟩 Thẻ chính -->
+  <main class="card" role="main" aria-label="Matcha Study Timer">
+    <!-- Header -->
+    <header>
+      <div class="cup" aria-hidden="true"></div>
+      <div>
+        <h1>Matcha Study Timer</h1>
+        <div class="subtitle">Study with Han Han.</div>
+      </div>
+    </header>
+
+    <section class="layout">
+      <!-- Bên trái: mặt đồng hồ -->
+      <div class="face">
+        <div class="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <!-- vòng tròn nền -->
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#e8f0e5" stroke-width="10"/>
+            <!-- vòng tròn progress -->
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--matcha)"/>
+                <stop offset="100%" stop-color="var(--deep-matcha)"/>
+              </linearGradient>
+            </defs>
+            <circle id="progress" cx="60" cy="60" r="54" fill="none" stroke="url(#g)" stroke-width="10"
+              stroke-linecap="round"
+              transform="rotate(-90 60 60)" stroke-dasharray="339.292" stroke-dashoffset="0" />
+          </svg>
+          <div class="time">
+            <div class="big" id="time">25:00</div>
+            <div class="mode" id="mode">Focus</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bên phải: input + nút điều khiển -->
+      <div>
+        <div class="grid" style="margin-bottom:16px">
+          <div>
+            <label for="focusMins">Let's focus</label>
+            <input id="focusMins" type="number" min="1" max="180" value="25" />
+          </div>
+          <div>
+            <label for="breakMins">Break time</label>
+            <input id="breakMins" type="number" min="1" max="60" value="5" />
+          </div>
+        </div>
+        <div class="controls" role="group" aria-label="Timer controls">
+          <button id="start">Start</button>
+          <button class="ghost" id="pause">Pause</button>
+          <button class="ghost" id="reset">Reset</button>
+          <button class="ghost" id="skip">Skip →</button>
+        </div>
+    </section>
+
+    <footer>
+      Study smarter - not harder. Made by Han Han Nguyen.
+    </footer>
+  </main>
+
+  <script>
+    /* --- JS: điều khiển logic đếm ngược --- */
+
+    // 📌 Lấy các phần tử từ HTML
+    const $ = (sel) => document.querySelector(sel);
+    const timeEl = $('#time');   // chỗ hiển thị thời gian
+    const modeEl = $('#mode');   // hiển thị chế độ (Focus/Break)
+    const prog = $('#progress'); // vòng tròn progress
+    const focusInput = $('#focusMins');
+    const breakInput = $('#breakMins');
+
+    // 📐 Chu vi của vòng tròn (r=54)
+    const C = 2 * Math.PI * 54; // ~339.292
+
+    // Trạng thái ban đầu
+    let mode = 'focus'; 
+    let total = 25 * 60; // 25 phút
+    let remaining = total;
+    let startedAt = null; 
+    let rafId = null; 
+    let paused = true;
+
+    // 📌 Lấy dữ liệu cũ từ localStorage
+    const saved = JSON.parse(localStorage.getItem('matchaTimer')||'{}');
+    if(saved.focus){ focusInput.value = saved.focus }
+    if(saved.break){ breakInput.value = saved.break }
+
+    // Cập nhật tổng thời gian từ input
+    total = parseInt(focusInput.value, 10) * 60;
+    remaining = total;
+
+    // Hàm format mm:ss
+    function fmt(secs){
+      const m = Math.floor(secs/60);
+      const s = Math.floor(secs%60);
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+
+    // Vẽ vòng tròn progress
+    function setDash(percent){
+      const offset = C * (1 - percent);
+      prog.style.strokeDasharray = C.toFixed(3);
+      prog.style.strokeDashoffset = offset.toFixed(3);
+    }
+
+    // Render lại giao diện
+    function render(){
+      timeEl.textContent = fmt(remaining);
+      modeEl.textContent = mode === 'focus' ? 'Focus' : 'Break';
+      setDash(1 - (remaining/total));
+    }
+
+    // Tick mỗi giây
+    function tick(){
+      if(paused) return;
+      const now = performance.now();
+      const elapsed = Math.floor((now - startedAt)/1000);
+      const nextRemaining = Math.max(total - elapsed, 0);
+      if(nextRemaining !== remaining){
+        remaining = nextRemaining; render();
+        if(remaining === 0){
+          chime();
+          switchMode();
+          return; 
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ▶️ Start timer
+    function start(){
+      if(!paused) return;
+      paused = false;
+      startedAt = performance.now() - ( (total - remaining) * 1000 );
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ⏸ Pause timer
+    function pause(){
+      if(paused) return; paused = true; cancelAnimationFrame(rafId);
+    }
+
+    // 🔄 Reset timer
+    function reset(){
+      pause();
+      total = (mode === 'focus' ? parseInt(focusInput.value,10) : parseInt(breakInput.value,10)) * 60;
+      remaining = total;
+      render();
+    }
+
+    // ⏩ Skip qua chế độ tiếp theo
+    function skip(){
+      remaining = 0; render(); chime(); switchMode();
+    }
+
+    // Đổi mode (focus <-> break)
+    function switchMode(){
+      mode = (mode === 'focus') ? 'break' : 'focus';
+      total = (mode === 'focus' ? parseInt(focusInput.value,10) : parseInt(breakInput.value,10)) * 60;
+      remaining = total; render();
+      // auto chạy tiếp
+      startedAt = performance.now(); paused = false; rafId = requestAnimationFrame(tick);
+    }
+
+    // 🔔 Âm thanh báo (chuông matcha)
+    function chime(){
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(660, ctx.currentTime);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+        o.connect(g).connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + 1.25);
+      }catch(e){ /* ignore */ }
+    }
+
+    // Lưu setting khi thay đổi input
+    [focusInput, breakInput].forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const f = Math.max(1, Math.min(180, parseInt(focusInput.value||25,10)));
+        const b = Math.max(1, Math.min(60, parseInt(breakInput.value||5,10)));
+        focusInput.value = f; breakInput.value = b;
+        localStorage.setItem('matchaTimer', JSON.stringify({focus:f, break:b}));
+        if(mode==='focus') { total=f*60; } else { total=b*60; }
+        remaining = total; render();
+      });
+    });
+
+    // Gán sự kiện cho nút
+    $('#start').addEventListener('click', start);
+    $('#pause').addEventListener('click', pause);
+    $('#reset').addEventListener('click', reset);
+    $('#skip').addEventListener('click', skip);
+
+    // Khởi tạo lần đầu
+    setDash(0); render();
+  </script>
+</body>
+</html>
