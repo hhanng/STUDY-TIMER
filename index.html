@@ -81,8 +81,22 @@
     .ring{ width:260px; height:260px; position:relative;}
     .ring svg{ width:100%; height:100%; display:block;}
 
-    /* Khu vực hiển thị số thời gian */
-    .time{ position:absolute; inset:0; display:grid; place-items:center; text-align:center; }
+    /* Khu vực hiển thị số thời gian — FIXED CENTERING */
+    .time{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%, -50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      width:100%;
+      height:100%;
+      pointer-events:none; /* tránh chặn click vào các phần tử khác nếu cần */
+    }
+
     .big{ font-size:64px; letter-spacing:1px; color:var(--deep-matcha); line-height:1; }
     .mode{ font-size:.95rem; margin-top:6px; color:#4b6a41; }
 
@@ -276,7 +290,7 @@
       startedAt = performance.now(); paused = false; rafId = requestAnimationFrame(tick);
     }
 
-    // 🔔 Âm thanh báo (chuông matcha)
+    //Âm thanh báo (chuông matcha)
     function chime(){
       try{
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -291,7 +305,6 @@
         o.start(); o.stop(ctx.currentTime + 1.25);
       }catch(e){ /* ignore */ }
     }
-
     // Lưu setting khi thay đổi input
     [focusInput, breakInput].forEach(inp=>{
       inp.addEventListener('change', ()=>{
